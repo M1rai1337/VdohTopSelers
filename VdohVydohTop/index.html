@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Топ продавцов</title>
+    <link href="https://fonts.googleapis.com/css2?family=Gilroy:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Gilroy', sans-serif;
+            text-align: center;
+            background-color: #ECECEC;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #313F8C;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: #fff;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .gold { background: #D75230; color: white; }
+        .silver { background: #313F8C; color: white; }
+        .bronze { background: #ECECEC; color: #313F8C; }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .nav-buttons button {
+            flex: 1;
+            background: #B0B0B0;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        .nav-buttons button:hover {
+            background: #909090;
+        }
+        .nav-buttons button.active {
+            background: #707070;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .info-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #313F8C;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+    </style>
+    <script>
+        function switchSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            
+            document.querySelectorAll('.nav-buttons button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+        }
+
+        async function fetchData() {
+            const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
+            const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
+            const range = 'Лист1!A2:B';
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                let sellers = data.values || [];
+                
+                sellers.sort((a, b) => Number(b[1]) - Number(a[1]));
+                
+                const list = document.getElementById('seller-list');
+                list.innerHTML = '';
+                
+                sellers.forEach(([name, points], index) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${index + 1}. ${name} - ${points} баллов`;
+                    
+                    if (index === 0) li.classList.add('gold');
+                    else if (index === 1) li.classList.add('silver');
+                    else if (index === 2) li.classList.add('bronze');
+                    
+                    list.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
+            }
+        }
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchData();
+            switchSection('top-sellers');
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-buttons">
+            <button data-section="top-sellers" onclick="switchSection('top-sellers')" class="active">🏆 Топ</button>
+            <button data-section="info" onclick="switchSection('info')">Инфо</button>
+        </div>
+        
+        <div id="top-sellers" class="section active">
+            <h1>🏆 Топ продавцов</h1>
+            <ul id="seller-list"></ul>
+        </div>
+        
+        <div id="info" class="section">
+            <h1>Информация</h1>
+            <p class="info-title">Система начисления баллов:</p>
+            <ul>
+                <li>Продажа 1 кальяна = 10 баллов</li>
+                <li>Продажа 1 пачки табака = 5 баллов</li>
+                <li>Привлечение нового клиента = 20 баллов</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
