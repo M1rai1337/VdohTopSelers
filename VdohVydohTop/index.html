@@ -70,15 +70,26 @@
             margin-top: 20px;
         }
         th, td {
-            border: 1px solid #D75230;
+            border: 1px solid #313F8C;
             padding: 8px;
             text-align: center;
         }
         th {
             background: #D75230;
-            border: 1px solid white;
+            border: 1px solid #313F8C;
             color: white;
         }
+
+        /* Скрытие всех столбцов, кроме первого и последнего на экранах меньше 628px */
+        @media (max-width: 628px) {
+            th, td {
+                display: table-cell;
+            }
+            th:not(:first-child):not(:last-child), td:not(:first-child):not(:last-child) {
+                display: none;
+            }
+        }
+
         @media (max-width: 830px) {
             .nav-buttons {
                 flex-direction: column;
@@ -109,7 +120,7 @@
         async function fetchData(sheetName, tableId) {
             const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
             const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
-            const range = `${sheetName}!A2:G`;
+            const range = `${sheetName}!A1:G`;  // Теперь берем с A1, чтобы включить заголовки
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
             
             try {
@@ -117,12 +128,26 @@
                 const data = await response.json();
                 let rows = data.values || [];
                 
-                rows.sort((a, b) => Number(b[6]) - Number(a[6])); // Сортировка по последнему столбцу (итоговые баллы)
-                
+                if (rows.length === 0) return;
+
                 const table = document.getElementById(tableId);
-                table.innerHTML = '<tr><th>Продавец</th><th>Продажи</th><th>UPT</th><th>Ср. чек</th><th>Морж. товары</th><th>Выполнение плана</th><th>Итого</th></tr>';
-                
-                rows.forEach(row => {
+                table.innerHTML = ''; // Очищаем перед вставкой новых данных
+
+                // Вставляем заголовки из первой строки таблицы
+                let headerRow = document.createElement('tr');
+                rows[0].forEach(headerText => {
+                    let th = document.createElement('th');
+                    th.textContent = headerText;
+                    headerRow.appendChild(th);
+                });
+                table.appendChild(headerRow);
+
+                // Удаляем заголовки из данных перед сортировкой
+                let dataRows = rows.slice(1);
+                dataRows.sort((a, b) => Number(b[6]) - Number(a[6])); // Сортировка по последнему столбцу (итоговые баллы)
+
+                // Вставляем данные
+                dataRows.forEach(row => {
                     let tr = document.createElement('tr');
                     row.forEach(cell => {
                         let td = document.createElement('td');
