@@ -125,7 +125,7 @@
     async function fetchData(sheetName, listId, isTeam) {
         const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
         const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
-        const range = `${sheetName}!A1:G`;
+        const range = `${sheetName}`;
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
 
         try {
