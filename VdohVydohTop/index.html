@@ -98,10 +98,7 @@
       margin-top: 40px;
       display: block;
     }
-    /* Скрыть футер, если открыта история */
-    #history.active ~ .footer {
-      display: none;
-    }
+
 
     @media (max-width: 500px) {
       .navbar {
@@ -251,7 +248,7 @@
 
         const content = `
           <h3>📅 ${date}</h3>
-          <p><strong>🧑‍💼 Лучший продавец:</strong> ${seller}</p>
+          <p><strong>🧑 Лучший продавец:</strong> ${seller}</p>
           <p><strong>🏬 Лучший магазин:</strong> ${store}</p>
         `;
 
