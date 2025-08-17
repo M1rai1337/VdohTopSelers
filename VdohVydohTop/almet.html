@@ -152,101 +152,124 @@
 
 <script>
 // Функция для извлечения нужных столбцов из строки
-function extractColumns(row, ranges) {
-  // ranges — массив [startIndex, endIndex] для каждой таблицы
-  return ranges.map(([start, end]) => row.slice(start, end + 1));
-}
-
-async function fetchData(sheetName, listId, isTeam) {
-  const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
-  const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
-
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    let rows = data.values || [];
-    if (rows.length < 2) return;
-
-    const headers = rows[0];
-    rows = rows.slice(1);
-
-    // Фильтруем строки с пустыми итогами
-    const scoreIndex = headers.findIndex(h => h.trim().toLowerCase() === 'итого баллов');
-    if (scoreIndex === -1) return;
-
-    const invalidValues = ['#Н/Д', '#REF!', '#N/A'];
-    rows = rows.filter(row => {
-      const value = row[scoreIndex];
-      return value !== undefined && value !== '' && !invalidValues.includes(value.trim());
+  function switchSection(sectionId) {
+    document.querySelectorAll('.section').forEach(section => {
+      section.classList.remove('active');
     });
+    document.getElementById(sectionId).classList.add('active');
 
-    // Сортируем по итоговым баллам
-    rows.sort((a, b) => (parseFloat(b[scoreIndex].replace(',', '.')) || 0) - (parseFloat(a[scoreIndex].replace(',', '.')) || 0));
+    document.querySelectorAll('.nav-item').forEach(nav => {
+      nav.classList.remove('active');
+    });
+    document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
 
-    const listContainer = document.getElementById(listId);
-    listContainer.innerHTML = '';
+    const line = document.querySelector('.nav-line');
+    if (sectionId === 'personal') line.style.left = '0%';
+    else if (sectionId === 'team') line.style.left = '33.33%';
+    else line.style.left = '66.66%';
+  }
 
-    rows.forEach((row, index) => {
-      // Берём нужные диапазоны столбцов, пропуская один между таблицами
-      const [personal, team] = extractColumns(row, [
-        [0, 7],   // Личный зачет A-H
-        [9, 16]   // Командный зачет J-Q (I пропускаем)
-      ]);
+  async function fetchData(sheetName, listId, isTeam) {
+    const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
+    const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
 
-      const relevant = isTeam ? team : personal;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      let rows = data.values || [];
 
-      const item = document.createElement('div');
-      item.classList.add('list-item');
+      if (rows.length < 2) return;
 
-      let content = `<h3>Место #${index + 1}</h3>`;
-      relevant.forEach((cell, i) => {
-        const label = i === 0 ? (isTeam ? 'Магазин' : 'Продавец') : headers[i];
-        content += `<p><strong>${label}:</strong> ${cell}</p>`;
+      const headers = rows[0];
+      rows = rows.slice(1);
+
+      const scoreIndex = headers.findIndex(h => h.trim().toLowerCase() === 'итого баллов');
+      if (scoreIndex === -1) return;
+
+      const invalidValues = ['#Н/Д', '#REF!', '#N/A'];
+      rows = rows.filter(row => {
+        const value = row[scoreIndex];
+        return value !== undefined && value !== '' && !invalidValues.includes(value.trim());
       });
 
-      item.innerHTML = content;
-      listContainer.appendChild(item);
-    });
-  } catch (error) {
-    console.error('Ошибка загрузки данных:', error);
+      rows.sort((a, b) => {
+        const aValue = parseFloat(a[scoreIndex].replace(',', '.')) || 0;
+        const bValue = parseFloat(b[scoreIndex].replace(',', '.')) || 0;
+        return bValue - aValue;
+      });
+
+      const listContainer = document.getElementById(listId);
+      listContainer.innerHTML = '';
+
+      rows.forEach((row, index) => {
+        const item = document.createElement('div');
+        item.classList.add('list-item');
+
+        let content = `<h3>Место #${index + 1}</h3>`;
+        row.forEach((cell, i) => {
+          const label = i === 0 ? (isTeam ? 'Магазин' : 'Продавец') : headers[i];
+          content += `<p><strong>${label}:</strong> ${cell}</p>`;
+        });
+
+        item.innerHTML = content;
+        listContainer.appendChild(item);
+      });
+
+    } catch (error) {
+      console.error('Ошибка загрузки данных:', error);
+    }
   }
-}
 
-async function fetchHistory(sheetName, listId) {
-  const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
-  const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
+  async function fetchHistory(sheetName, listId) {
+    const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
+    const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
 
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    let rows = data.values || [];
-    if (rows.length < 2) return;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      let rows = data.values || [];
 
-    const listContainer = document.getElementById(listId);
-    listContainer.innerHTML = '';
+      if (rows.length < 2) return;
 
-    rows.slice(1).forEach(row => {
-      // Берём только столбцы истории (S-U), пропуская один столбец между таблицами
-      const [history] = extractColumns(row, [[18, 20]]);
+      const headers = rows[0];
+      rows = rows.slice(1);
 
-      const item = document.createElement('div');
-      item.classList.add('history-item');
-      item.innerHTML = `
-        <h3>📅 ${history[0] || '—'}</h3>
-        <p><strong>🧑 Лучший продавец:</strong> ${history[1] || '—'}</p>
-        <p><strong>🏬 Лучший магазин:</strong> ${history[2] || '—'}</p>
-      `;
-      listContainer.appendChild(item);
-    });
-  } catch (err) {
-    console.error('Ошибка загрузки истории:', err);
+      const listContainer = document.getElementById(listId);
+      listContainer.innerHTML = '';
+
+      rows.forEach(row => {
+        const item = document.createElement('div');
+        item.classList.add('history-item');
+
+        const date = row[0] || '—';
+        const seller = row[1] || '—';
+        const store = row[2] || '—';
+
+        const content = `
+          <h3>📅 ${date}</h3>
+          <p><strong>🧑 Лучший продавец:</strong> ${seller}</p>
+          <p><strong>🏬 Лучший магазин:</strong> ${store}</p>
+        `;
+
+        item.innerHTML = content;
+        listContainer.appendChild(item);
+      });
+    } catch (err) {
+      console.error('Ошибка загрузки истории:', err);
+    }
   }
-}
 
+  document.addEventListener("DOMContentLoaded", () => {
+    fetchData('Личный зачет', 'personal-list', false);
+    fetchData('Командный зачет', 'team-list', true);
+    fetchHistory('История', 'history-list');
+    switchSection('personal');
+  });
 </script>
 
 </body>
 </html>
+
 
