@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Зачеты</title>
+  <title>Зачеты и FAQ</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     body {
@@ -11,6 +11,11 @@
       text-align: center;
       background-color: #ECECEC;
       margin: 0;
+    }
+    p{
+      margin: 0;
+      padding: 5px 0 5px 0;
+      text-align: left;
     }
     .container {
       max-width: 800px;
@@ -32,7 +37,7 @@
     .nav-item {
       cursor: pointer;
       padding: 10px;
-      font-size: 18px;
+      font-size: 16px;
       color: #555;
       position: relative;
     }
@@ -40,15 +45,15 @@
       font-weight: bold;
       color: #313F8C;
     }
+    
     .nav-line {
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 33.33%;
-      height: 3px;
-      background-color: #313F8C;
-      transition: left 0.3s ease-in-out;
-    }
+  position: absolute;
+  bottom: -2px;
+  width: 33%;
+  height: 3px;
+  background-color: #313F8C;
+  transition: left 0.3s ease-in-out;
+}
     .section {
       display: none;
       margin-top: 20px;
@@ -98,7 +103,9 @@
       margin-top: 40px;
       display: block;
     }
-
+    #history.active ~ .footer {
+      display: none;
+    }
 
     @media (max-width: 500px) {
       .navbar {
@@ -106,19 +113,12 @@
         align-items: stretch;
       }
       .nav-item {
-        width: 100%;
         text-align: center;
         border-bottom: 1px solid #ddd;
       }
       .nav-line {
         display: none;
       }
-      .nav-line {
-       display: none;
-      }
-     .navbar {
-       border-bottom: 0px solid #ccc;
-     }
     }
   </style>
 </head>
@@ -147,129 +147,134 @@
     <div id="history-list" class="list-container"></div>
   </div>
 
+
   <div class="footer"></div>
 </div>
 
 <script>
-// Функция для извлечения нужных столбцов из строки
-  function switchSection(sectionId) {
-    document.querySelectorAll('.section').forEach(section => {
-      section.classList.remove('active');
-    });
-    document.getElementById(sectionId).classList.add('active');
+function switchSection(sectionId) {
+  document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+  document.getElementById(sectionId).classList.add('active');
 
-    document.querySelectorAll('.nav-item').forEach(nav => {
-      nav.classList.remove('active');
-    });
-    document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+  const activeNav = document.querySelector(`[data-section="${sectionId}"]`);
+  activeNav.classList.add('active');
 
-    const line = document.querySelector('.nav-line');
-    if (sectionId === 'personal') line.style.left = '0%';
-    else if (sectionId === 'team') line.style.left = '33.33%';
-    else line.style.left = '66.66%';
+  const line = document.querySelector('.nav-line');
+  if (line) {
+    const rect = activeNav.getBoundingClientRect();
+    const parentRect = activeNav.parentElement.getBoundingClientRect();
+    
+    const lineWidth = parentRect.width / 3; // 33% ширины родителя
+    line.style.width = lineWidth + 'px';
+
+    // центр текста активного пункта
+    let textCenter = rect.left + rect.width / 2 - parentRect.left;
+
+    // ограничиваем, чтобы линия не выходила за границы родителя
+    const minLeft = 0;
+    const maxLeft = parentRect.width - lineWidth;
+    let leftPos = textCenter - lineWidth / 2;
+    leftPos = Math.max(minLeft, Math.min(maxLeft, leftPos));
+
+    line.style.left = leftPos + 'px';
   }
+}
 
-  async function fetchData(sheetName, listId, isTeam) {
+  async function fetchDataSplit() {
     const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
     const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
+    const sheetName = 'Результат (альмет)';
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
 
     try {
       const response = await fetch(url);
       const data = await response.json();
       let rows = data.values || [];
-
       if (rows.length < 2) return;
-
       const headers = rows[0];
       rows = rows.slice(1);
-
-      const scoreIndex = headers.findIndex(h => h.trim().toLowerCase() === 'итого баллов');
-      if (scoreIndex === -1) return;
 
       const invalidValues = ['#Н/Д', '#REF!', '#N/A'];
-      rows = rows.filter(row => {
-        const value = row[scoreIndex];
-        return value !== undefined && value !== '' && !invalidValues.includes(value.trim());
-      });
 
-      rows.sort((a, b) => {
-        const aValue = parseFloat(a[scoreIndex].replace(',', '.')) || 0;
-        const bValue = parseFloat(b[scoreIndex].replace(',', '.')) || 0;
-        return bValue - aValue;
-      });
+      // Разделяем колонки
+      const personalHeaders = headers.slice(0, 8); // A-H
+      const teamHeaders = headers.slice(9, 17);    // J-Q
+      const historyHeaders = headers.slice(18, 21);// S-U
+      let personalRows = rows.map(r => r.slice(0, 8))
+                       .filter(r => r.some(cell => cell && cell.trim() !== '') && 
+                                    !r.some(cell => invalidValues.includes((cell || '').trim())));
+    let teamRows = rows.map(r => r.slice(9, 17))
+                   .filter(r => r.some(cell => cell && cell.trim() !== '') &&
+                                !r.some(cell => invalidValues.includes((cell || '').trim())));
+      let historyRows = rows.map(r => r.slice(18, 21))
+                      .filter(r => r.some(cell => cell && cell.trim() !== '') &&
+                                   !r.some(cell => invalidValues.includes((cell || '').trim())));
 
-      const listContainer = document.getElementById(listId);
-      listContainer.innerHTML = '';
+      // Сортировка по итоговому баллу (последняя колонка)
+      personalRows.sort((a, b) => parseFloat(b[7] || 0) - parseFloat(a[7] || 0));
+      teamRows.sort((a, b) => parseFloat(b[7] || 0) - parseFloat(a[7] || 0));
 
-      rows.forEach((row, index) => {
-        const item = document.createElement('div');
-        item.classList.add('list-item');
+      renderList('personal-list', personalRows, personalHeaders);
+      renderList('team-list', teamRows, teamHeaders);
+      renderHistory('history-list', historyRows, historyHeaders);
 
-        let content = `<h3>Место #${index + 1}</h3>`;
-        row.forEach((cell, i) => {
-          const label = i === 0 ? (isTeam ? 'Магазин' : 'Продавец') : headers[i];
-          content += `<p><strong>${label}:</strong> ${cell}</p>`;
-        });
-
-        item.innerHTML = content;
-        listContainer.appendChild(item);
-      });
-
-    } catch (error) {
-      console.error('Ошибка загрузки данных:', error);
-    }
-  }
-
-  async function fetchHistory(sheetName, listId) {
-    const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
-    const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
-
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      let rows = data.values || [];
-
-      if (rows.length < 2) return;
-
-      const headers = rows[0];
-      rows = rows.slice(1);
-
-      const listContainer = document.getElementById(listId);
-      listContainer.innerHTML = '';
-
-      rows.forEach(row => {
-        const item = document.createElement('div');
-        item.classList.add('history-item');
-
-        const date = row[0] || '—';
-        const seller = row[1] || '—';
-        const store = row[2] || '—';
-
-        const content = `
-          <h3>📅 ${date}</h3>
-          <p><strong>🧑 Лучший продавец:</strong> ${seller}</p>
-          <p><strong>🏬 Лучший магазин:</strong> ${store}</p>
-        `;
-
-        item.innerHTML = content;
-        listContainer.appendChild(item);
-      });
     } catch (err) {
-      console.error('Ошибка загрузки истории:', err);
+      console.error('Ошибка загрузки данных:', err);
     }
   }
 
+  function renderList(listId, rows, headers) {
+    const container = document.getElementById(listId);
+    container.innerHTML = '';
+    const invalidValues = ['#Н/Д', '#REF!', '#N/A'];
+
+    rows.forEach((row, index) => {
+      const item = document.createElement('div');
+      item.className = 'list-item';
+      let html = `<h3>Место #${index + 1}</h3>`;
+
+      row.forEach((cell, i) => {
+        if (!cell || invalidValues.includes(cell.trim())) return;
+        html += `<p><strong>${headers[i]}:</strong> ${cell}</p>`;
+      });
+
+      container.appendChild(item);
+      item.innerHTML = html;
+    });
+  }
+
+  function renderHistory(listId, rows, headers) {
+    const container = document.getElementById(listId);
+    container.innerHTML = '';
+    const invalidValues = ['#Н/Д', '#REF!', '#N/A'];
+
+    rows.forEach(row => {
+      const date = row[0] && !invalidValues.includes(row[0].trim()) ? row[0] : '—';
+      const seller = row[1] && !invalidValues.includes(row[1].trim()) ? row[1] : '—';
+      const store = row[2] && !invalidValues.includes(row[2].trim()) ? row[2] : '—';
+
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = `
+        <h3>📅 ${date}</h3>
+        <p><strong>🧑 Лучший продавец:</strong> ${seller}</p>
+        <p><strong>🏬 Лучший магазин:</strong> ${store}</p>
+      `;
+      container.appendChild(item);
+    });
+  }
+
+  
   document.addEventListener("DOMContentLoaded", () => {
-    fetchData('Личный зачет', 'personal-list', false);
-    fetchData('Командный зачет', 'team-list', true);
-    fetchHistory('История', 'history-list');
+    fetchDataSplit();
     switchSection('personal');
   });
 </script>
 
+
+
+  
+
 </body>
 </html>
-
-
