@@ -181,49 +181,49 @@ function switchSection(sectionId) {
   }
 }
 
-  async function fetchDataSplit() {
-    const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
-    const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
-    const sheetName = 'Результат (альмет)';
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
+async function fetchDataSplit() {
+  const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
+  const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
+  const sheetName = 'Результат (альмет)';
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
 
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      let rows = data.values || [];
-      if (rows.length < 2) return;
-      const headers = rows[0];
-      rows = rows.slice(1);
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    let rows = data.values || [];
+    if (rows.length < 2) return;
+    const headers = rows[0];
+    rows = rows.slice(1);
 
-      const invalidValues = ['#Н/Д', '#REF!', '#N/A'];
+    const invalidValues = ['#Н/Д', '#REF!', '#N/A'];
 
-      // Разделяем колонки
-      const personalHeaders = headers.slice(0, 8); // A-H
-      const teamHeaders = headers.slice(9, 17);    // J-Q
-      const historyHeaders = headers.slice(18, 21);// S-U
-      let personalRows = rows.map(r => r.slice(0, 8))
-                       .filter(r => r.some(cell => cell && cell.trim() !== '') && 
-                                    !r.some(cell => invalidValues.includes((cell || '').trim())));
+    // Разделяем колонки
+    const personalHeaders = headers.slice(0, 8); // A-H
+    const teamHeaders = headers.slice(9, 17);    // J-Q
+    const historyHeaders = headers.slice(18, 21);// S-U
+
+    let personalRows = rows.map(r => r.slice(0, 8))
+                     .filter(r => r.some(cell => cell && cell.trim() !== '') && 
+                                  !r.some(cell => invalidValues.includes((cell || '').trim())));
     let teamRows = rows.map(r => r.slice(9, 17))
                    .filter(r => r.some(cell => cell && cell.trim() !== '') &&
                                 !r.some(cell => invalidValues.includes((cell || '').trim())));
-      let historyRows = rows.map(r => r.slice(18, 21))
-                      .filter(r => r.some(cell => cell && cell.trim() !== '') &&
-                                   !r.some(cell => invalidValues.includes((cell || '').trim())));
+    let historyRows = rows.map(r => r.slice(18, 21))
+                    .filter(r => r.some(cell => cell && cell.trim() !== '') &&
+                                 !r.some(cell => invalidValues.includes((cell || '').trim())));
 
-      // Сортировка по итоговому баллу (последняя колонка)
-      personalRows.sort((a, b) => parseFloat(b[7].replace(',', '.') || 0) - parseFloat(a[7].replace(',', '.') || 0));
-      teamRows.sort((a, b) => parseFloat(b[7].replace(',', '.') || 0) - parseFloat(a[7].replace(',', '.') || 0));
+    // Сортировка по итоговому баллу (последняя колонка), с заменой запятой на точку
+    personalRows.sort((a, b) => parseFloat(b[7].replace(',', '.') || 0) - parseFloat(a[7].replace(',', '.') || 0));
+    teamRows.sort((a, b) => parseFloat(b[7].replace(',', '.') || 0) - parseFloat(a[7].replace(',', '.') || 0));
 
+    renderList('personal-list', personalRows, personalHeaders);
+    renderList('team-list', teamRows, teamHeaders);
+    renderHistory('history-list', historyRows, historyHeaders);
 
-      renderList('personal-list', personalRows, personalHeaders);
-      renderList('team-list', teamRows, teamHeaders);
-      renderHistory('history-list', historyRows, historyHeaders);
-
-    } catch (err) {
-      console.error('Ошибка загрузки данных:', err);
-    }
+  } catch (err) {
+    console.error('Ошибка загрузки данных:', err);
   }
+}
 
   function renderList(listId, rows, headers) {
     const container = document.getElementById(listId);
@@ -279,4 +279,5 @@ function switchSection(sectionId) {
 
 </body>
 </html>
+
 
