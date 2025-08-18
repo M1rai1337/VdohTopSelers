@@ -212,8 +212,9 @@ function switchSection(sectionId) {
                                    !r.some(cell => invalidValues.includes((cell || '').trim())));
 
       // Сортировка по итоговому баллу (последняя колонка)
-      personalRows.sort((a, b) => parseFloat(b[7] || 0) - parseFloat(a[7] || 0));
-      teamRows.sort((a, b) => parseFloat(b[7] || 0) - parseFloat(a[7] || 0));
+      personalRows.sort((a, b) => parseFloat(b[7].replace(',', '.') || 0) - parseFloat(a[7].replace(',', '.') || 0));
+      teamRows.sort((a, b) => parseFloat(b[7].replace(',', '.') || 0) - parseFloat(a[7].replace(',', '.') || 0));
+
 
       renderList('personal-list', personalRows, personalHeaders);
       renderList('team-list', teamRows, teamHeaders);
@@ -278,3 +279,4 @@ function switchSection(sectionId) {
 
 </body>
 </html>
+
