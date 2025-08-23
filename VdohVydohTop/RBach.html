@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Зачеты и FAQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      text-align: center;
+      background-color: #ECECEC;
+      margin: 0;
+    }
+    p{
+      margin: 0;
+      padding: 5px 0 5px 0;
+      text-align: left;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      position: relative;
+      border-bottom: 2px solid #ccc;
+      flex-wrap: wrap;
+    }
+    .nav-item {
+      cursor: pointer;
+      padding: 10px;
+      font-size: 16px;
+      color: #555;
+      position: relative;
+    }
+    .nav-item.active {
+      font-weight: bold;
+      color: #313F8C;
+    }
+    
+    .nav-line {
+      position: absolute;
+      bottom: -2px;
+      width: 33%;
+      height: 3px;
+      background-color: #313F8C;
+      transition: left 0.3s ease-in-out;
+    }
+    .section {
+      display: none;
+      margin-top: 20px;
+    }
+    .section.active {
+      display: block;
+    }
+    .list-container {
+      text-align: left;
+      padding: 0;
+    }
+    .list-item {
+      background: #ECECEC;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .list-item h3 {
+      margin: 0;
+      color: #D75230;
+    }
+    .list-item p {
+      margin: 5px 0;
+    }
+    .history-item {
+      background: #fff;
+      border-left: 5px solid #313F8C;
+      margin: 10px 0;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    .history-item h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      color: #313F8C;
+    }
+    .history-item p {
+      margin: 5px 0;
+      font-size: 15px;
+    }
+    .footer {
+      background-size: cover;
+      height: 100px;
+      width: 100%;
+      margin-top: 40px;
+      display: block;
+    }
+    #history.active ~ .footer {
+      display: none;
+    }
+
+    @media (max-width: 500px) {
+      .navbar {
+        flex-direction: column;
+        align-items: stretch;
+        border-bottom: 0px solid #ccc;
+      }
+      .nav-item {
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+      }
+      .nav-line {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app" class="container" style="display:none;">
+  <div class="navbar">
+    <div class="nav-item active" data-section="personal" onclick="switchSection('personal')">Личный зачет</div>
+    <div class="nav-item" data-section="team" onclick="switchSection('team')">Командный зачет</div>
+    <div class="nav-item" data-section="history" onclick="switchSection('history')">История</div>
+    <div class="nav-line"></div>
+  </div>
+
+  <div id="personal" class="section active">
+    <h1>Личный зачет</h1>
+    <div id="personal-list" class="list-container"></div>
+  </div>
+
+  <div id="team" class="section">
+    <h1>Командный зачет</h1>
+    <div id="team-list" class="list-container"></div>
+  </div>
+
+  <div id="history" class="section">
+    <h1>История</h1>
+    <div id="history-list" class="list-container"></div>
+  </div>
+
+  <div class="footer"></div>
+</div>
+
+<div id="blocked" style="display:none; text-align:center; padding:50px;">
+  <h2 style="color:red;">⛔ Доступ запрещён</h2>
+  <p>Обратитесь к администратору.</p>
+</div>
+
+<script>
+async function checkAccess() {
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+
+  const user = tg.initDataUnsafe.user;
+  if (!user) {
+    document.getElementById("blocked").style.display = "block";
+    return false;
+  }
+
+  const username = user.username ? user.username.toLowerCase() : null;
+  try {
+    const res = await fetch("https://m1rai1337.github.io/VdohTopSelers/VdohVydohTop/allowed_users.json");
+    const allowedUsers = await res.json();
+
+    if (username && allowedUsers.map(u => u.toLowerCase()).includes(username)) {
+      document.getElementById("app").style.display = "block";
+      return true;
+    } else {
+      document.getElementById("blocked").style.display = "block";
+      return false;
+    }
+  } catch (err) {
+    console.error("Ошибка загрузки whitelist:", err);
+    document.getElementById("blocked").style.display = "block";
+    return false;
+  }
+}
+
+function switchSection(sectionId) {
+  document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+  document.getElementById(sectionId).classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+  const activeNav = document.querySelector(`[data-section="${sectionId}"]`);
+  activeNav.classList.add('active');
+
+  const line = document.querySelector('.nav-line');
+  if (line) {
+    const rect = activeNav.getBoundingClientRect();
+    const parentRect = activeNav.parentElement.getBoundingClientRect();
+    
+    const lineWidth = parentRect.width / 3;
+    line.style.width = lineWidth + 'px';
+
+    let textCenter = rect.left + rect.width / 2 - parentRect.left;
+    const minLeft = 0;
+    const maxLeft = parentRect.width - lineWidth;
+    let leftPos = textCenter - lineWidth / 2;
+    leftPos = Math.max(minLeft, Math.min(maxLeft, leftPos));
+
+    line.style.left = leftPos + 'px';
+  }
+}
+
+async function fetchDataSplit() {
+  const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
+  const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
+  const sheetName = 'Подсчет данных (Башкирия)';
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    let rows = data.values || [];
+    if (rows.length < 2) return;
+    const headers = rows[0];
+    rows = rows.slice(1);
+
+    const invalidValues = ['#Н/Д', '#REF!', '#N/A'];
+
+    const personalHeaders = headers.slice(0, 8);
+    const teamHeaders = headers.slice(9, 17);
+    const historyHeaders = headers.slice(18, 21);
+
+    let personalRows = rows.map(r => r.slice(0, 8))
+      .filter(r => r.some(cell => cell && cell.trim() !== '') && 
+                   !r.some(cell => invalidValues.includes((cell || '').trim())));
+
+    let teamRows = rows.map(r => r.slice(9, 17))
+      .filter(r => r.some(cell => cell && cell.trim() !== '') &&
+                   !r.some(cell => invalidValues.includes((cell || '').trim())));
+
+    let historyRows = rows.map(r => r.slice(18, 21))
+      .filter(r => r.some(cell => cell && cell.trim() !== '') &&
+                   !r.some(cell => invalidValues.includes((cell || '').trim())));
+
+    personalRows.sort((a, b) => parseFloat(b[7] || 0) - parseFloat(a[7] || 0));
+    teamRows.sort((a, b) => parseFloat(b[7] || 0) - parseFloat(a[7] || 0));
+
+    renderList('personal-list', personalRows, personalHeaders);
+    renderList('team-list', teamRows, teamHeaders);
+    renderHistory('history-list', historyRows, historyHeaders);
+
+  } catch (err) {
+    console.error('Ошибка загрузки данных:', err);
+  }
+}
+
+function renderList(listId, rows, headers) {
+  const container = document.getElementById(listId);
+  container.innerHTML = '';
+  const invalidValues = ['#Н/Д', '#REF!', '#N/A'];
+
+  rows.forEach((row, index) => {
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    let html = `<h3>Место #${index + 1}</h3>`;
+
+    row.forEach((cell, i) => {
+      if (!cell || invalidValues.includes(cell.trim())) return;
+      html += `<p><strong>${headers[i]}:</strong> ${cell}</p>`;
+    });
+
+    container.appendChild(item);
+    item.innerHTML = html;
+  });
+}
+
+function renderHistory(listId, rows, headers) {
+  const container = document.getElementById(listId);
+  container.innerHTML = '';
+  const invalidValues = ['#Н/Д', '#REF!', '#N/A'];
+
+  rows.forEach(row => {
+    const date = row[0] && !invalidValues.includes(row[0].trim()) ? row[0] : '—';
+    const seller = row[1] && !invalidValues.includes(row[1].trim()) ? row[1] : '—';
+    const store = row[2] && !invalidValues.includes(row[2].trim()) ? row[2] : '—';
+
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.innerHTML = `
+      <h3>📅 ${date}</h3>
+      <p><strong>🧑 Лучший продавец:</strong> ${seller}</p>
+      <p><strong>🏬 Лучший магазин:</strong> ${store}</p>
+    `;
+    container.appendChild(item);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const access = await checkAccess();
+  if (access) {
+    fetchDataSplit();
+    switchSection('personal');
+  }
+});
+</script>
+</body>
+</html>
