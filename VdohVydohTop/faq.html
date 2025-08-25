@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FAQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+body {
+  font-family: 'Montserrat', sans-serif;
+  text-align: center;
+  background-color: #ECECEC;
+  margin: 0;
+  padding: 20px;
+}
+
+h1{
+    text-align: center;
+    margin: 0px 0 30px 0;
+}
+
+.faq-container {
+  max-width: 800px;
+  margin: auto;
+  text-align: left;
+}
+
+.faq-category {
+  background-color: #313F8C;
+  color: #fff;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.faq-category.open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.faq-questions {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.01s inherit;
+  margin: 0;
+  padding: 0;
+}
+
+.faq-questions.open {
+  max-height: 5000px;
+  padding: 0 0 5px 0;
+  transition: max-height 3s ease;
+}
+
+.faq-question {
+  background-color: #D75230;
+  color: #fff;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  position: relative;
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.01s ease;
+  background-color: #fff;
+  padding: 0px;
+  border-radius: 5px;
+  font-size: 14px;
+  color: #555;
+  opacity: 0;
+}
+
+.faq-answer.open {
+  max-height: 5000px;
+  opacity: 100;
+  padding: 10px;
+  transition: max-height 1s ease;
+}
+
+@media (max-width: 320px) {
+  .faq-answer.open {
+    font-size: 13px;
+  }
+  body{
+    padding: 10px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="faq-container" id="faq-container">
+    <H1>FAQ</H1>
+</div>
+
+<script src="faq.js"></script>
+<script>
+function createFAQ(data) {
+  const container = document.getElementById('faq-container');
+  data.forEach(categoryData => {
+    const category = document.createElement('div');
+    category.className = 'faq-category';
+    category.textContent = categoryData.category;
+
+    const questionsContainer = document.createElement('div');
+    questionsContainer.className = 'faq-questions';
+
+    categoryData.questions.forEach(q => {
+      const question = document.createElement('div');
+      question.className = 'faq-question';
+      question.textContent = q.q;
+
+      const answer = document.createElement('div');
+      answer.className = 'faq-answer';
+      answer.innerHTML = q.a.join('<p>');
+
+      question.addEventListener('click', () => {
+        answer.classList.toggle('open');
+      });
+
+      questionsContainer.appendChild(question);
+      questionsContainer.appendChild(answer);
+    });
+
+    category.addEventListener('click', () => {
+      questionsContainer.classList.toggle('open');
+      category.classList.toggle('open');
+    });
+
+    container.appendChild(category);
+    container.appendChild(questionsContainer);
+  });
+}
+
+// Загружаем данные из faq.js (он должен содержать массив объектов)
+createFAQ(faqData);
+</script>
+
+</body>
+</html>
