@@ -233,15 +233,15 @@ async function fetchDataSplit() {
     const teamHeaders = headers.slice(10, 19);
     const historyHeaders = headers.slice(20, 23);
 
-    let personalRows = rows.map(r => r.slice(0, 8))
+    let personalRows = rows.map(r => r.slice(0, 9))
       .filter(r => r.some(cell => cell && cell.trim() !== '') && 
                    !r.some(cell => invalidValues.includes((cell || '').trim())));
 
-    let teamRows = rows.map(r => r.slice(9, 17))
+    let teamRows = rows.map(r => r.slice(10, 19))
       .filter(r => r.some(cell => cell && cell.trim() !== '') &&
                    !r.some(cell => invalidValues.includes((cell || '').trim())));
 
-    let historyRows = rows.map(r => r.slice(18, 21))
+    let historyRows = rows.map(r => r.slice(20, 23))
       .filter(r => r.some(cell => cell && cell.trim() !== '') &&
                    !r.some(cell => invalidValues.includes((cell || '').trim())));
 
@@ -308,5 +308,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 </script>
 </body>
 </html>
+
 
 
