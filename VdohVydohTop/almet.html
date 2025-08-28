@@ -245,8 +245,8 @@ async function fetchDataSplit() {
       .filter(r => r.some(cell => cell && cell.trim() !== '') &&
                    !r.some(cell => invalidValues.includes((cell || '').trim())));
 
-    personalRows.sort((a, b) => parseFloat(b[7] || 0) - parseFloat(a[7] || 0));
-    teamRows.sort((a, b) => parseFloat(b[7] || 0) - parseFloat(a[7] || 0));
+    personalRows.sort((a, b) => parseFloat(b[8] || 0) - parseFloat(a[8] || 0));
+    teamRows.sort((a, b) => parseFloat(b[8] || 0) - parseFloat(a[8] || 0));
 
     renderList('personal-list', personalRows, personalHeaders);
     renderList('team-list', teamRows, teamHeaders);
@@ -308,6 +308,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 </script>
 </body>
 </html>
+
 
 
 
