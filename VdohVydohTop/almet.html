@@ -229,9 +229,9 @@ async function fetchDataSplit() {
 
     const invalidValues = ['#Н/Д', '#REF!', '#N/A'];
 
-    const personalHeaders = headers.slice(0, 8);
-    const teamHeaders = headers.slice(9, 17);
-    const historyHeaders = headers.slice(18, 21);
+    const personalHeaders = headers.slice(0, 9);
+    const teamHeaders = headers.slice(10, 19);
+    const historyHeaders = headers.slice(20, 23);
 
     let personalRows = rows.map(r => r.slice(0, 8))
       .filter(r => r.some(cell => cell && cell.trim() !== '') && 
@@ -308,4 +308,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 </script>
 </body>
 </html>
+
 
