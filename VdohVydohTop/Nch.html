@@ -212,6 +212,15 @@ function switchSection(sectionId) {
   }
 }
 
+// 🔧 Функция для корректного преобразования в число
+function toNumber(value) {
+  if (!value) return 0;
+  let num = value.toString().trim()
+    .replace(',', '.')          // запятая → точка
+    .replace(/[^0-9.-]/g, '');  // убрать всё кроме цифр, точки и минуса
+  return parseFloat(num) || 0;
+}
+
 async function fetchDataSplit() {
   const sheetId = '1nr47-4q_xtG2XIMfKruc3s6bE98qjveToUs2ev9KkyA';
   const apiKey = 'AIzaSyCUzIEAOGbRjSGBOoHpaLGxf7BumleZKIQ';
@@ -244,8 +253,9 @@ async function fetchDataSplit() {
       .filter(r => r.some(cell => cell && cell.trim() !== '') &&
                    !r.some(cell => invalidValues.includes((cell || '').trim())));
 
-    personalRows.sort((a, b) => parseFloat(b[8] || 0) - parseFloat(a[8] || 0));
-    teamRows.sort((a, b) => parseFloat(b[8] || 0) - parseFloat(a[8] || 0));
+    // сортировка с учётом дробей
+    personalRows.sort((a, b) => toNumber(b[8]) - toNumber(a[8]));
+    teamRows.sort((a, b) => toNumber(b[8]) - toNumber(a[8]));
 
     renderList('personal-list', personalRows, personalHeaders);
     renderList('team-list', teamRows, teamHeaders);
@@ -307,4 +317,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 </script>
 </body>
 </html>
+
 
